@@ -16,10 +16,10 @@ def get_population_wb():
 
 def get_ln_value(value, use_ln_value):
     """
-
-    :param value:
-    :param use_ln_value:
-    :return:
+    Возвращает исходное значение если :param use_ln_value=False, иначе верен натуральный логарифм от значения
+    :param value: значение для вычисления логарифма
+    :param use_ln_value: True - если надо получить логарфм от значения
+    :return: результат
     """
     return np.log(value) if use_ln_value else value
 
@@ -69,4 +69,4 @@ def draw_simple_population_data():
     plot.show()
 
 
-draw_simple_population_data()
+# draw_simple_population_data()
