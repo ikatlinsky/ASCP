@@ -13,10 +13,11 @@ def plan_matrix(data):
 
 
 def data_vector(data):
-    return [[element[1]] for element in data]
+    return [element[1] for element in data]
 
 
 def regression_coefficients(plan, y):
+    print y
     u, s, v = la.svd(np.dot(np.transpose(plan), plan))
     inv_s = np.diag([1/d for d in s])
     # (V.invS.Transpose[U])
@@ -26,7 +27,40 @@ def regression_coefficients(plan, y):
     # (V.invS.Transpose[U]).Transpose[plan].Transpose[{y}]
     c = np.dot(c, np.transpose([y]))
 
-    return [c[0, 0, 0], c[1, 0, 0]]
+    return [c[0, 0], c[1, 0]]
+
+
+def regression_coefficients_hyper(data):
+    data = np.asanyarray(data)
+    t0 = 2016
+    y = [np.log(val) for val in data[:, 1]]
+    x = [np.log(t0 - val) for val in data[:, 0]]
+
+    print y
+
+    r = 10
+    c2 = 0
+    while r > 5 and (-1 - c2) < 0.1:
+        t0 += 1
+        pl_m = [[1, np.log(t0 - val[0])] for val in data]
+        u, s, v = la.svd(np.dot(np.transpose(pl_m), pl_m))
+        inv_s = np.diag([1/d for d in s])
+        # (V.invS.Transpose[U])
+        c = np.dot(np.dot(v, inv_s), np.transpose(u))
+        # (V.invS.Transpose[U]).Transpose[plan]
+        c = np.dot(c, np.transpose(pl_m))
+        # (V.invS.Transpose[U]).Transpose[plan].Transpose[{y}]
+        c = np.dot(c, np.transpose([y]))
+
+        r = 0
+
+        for i in range(len(data)):
+            r += np.power(y[i] - c[0, 0] - c[1, 0] * x[i], 2)
+
+        r = np.sqrt(r)
+        c2 = c[1, 0]
+
+    return [c[0, 0], t0]
 
 
 def f(t, c):
@@ -62,7 +96,7 @@ def show_plots_for_single_source():
     plot.plot(population[:, 0], [f(t, linear_model) for t in population[:, 0]])
     plot.xlabel("T")
     plot.ylabel("N")
-    plot.title("Population: standard scale")
+    plot.title("Population: Linear model")
 
     # Экспоненциальная модель
     exp_model = regression_coefficients(plan_matrix_ss, y_ln)
@@ -71,7 +105,7 @@ def show_plots_for_single_source():
     plot.plot(population_ln[:, 0], [f(t, exp_model) for t in population_ln[:, 0]])
     plot.xlabel("T")
     plot.ylabel("Ln(N)")
-    plot.title("Population: Ln from population")
+    plot.title("Population: Exponential model")
 
     plot.show()
 
@@ -96,7 +130,7 @@ def show_plots_for_different_sources():
     plot.fill_between(data[1][:, 0], data[1][:, 1], data[2][:, 1], color='red')
     plot.xlabel("T")
     plot.ylabel("N")
-    plot.title("Population: standard scale")
+    plot.title("Population: Linear Model")
 
     # Экспоненциальная модель
     data = ddsp.get_data_from_different_sources(use_population_ln=True)
@@ -112,10 +146,26 @@ def show_plots_for_different_sources():
     plot.fill_between(data[1][:, 0], data[1][:, 1], data[2][:, 1], color='red')
     plot.xlabel("T")
     plot.ylabel("Ln(N)")
-    plot.title("Population: Ln from population")
+    plot.title("Population: Exponential model")
 
+    plot.show()
+
+
+def hyp_f(t, c):
+    return np.exp(c[0])/(c[1] - t)
+
+
+def show_plots_for_single_source_hyp():
+    # population = dpp.get_population_data(use_population_ln=True)
+    hyp_model = regression_coefficients_hyper(population)
+    plot.plot(population[:, 0], population[:, 1], linestyle='-', color='r')
+    plot.plot(population[:, 0], [f(t, hyp_model) for t in population[:, 0]])
+    plot.xlabel("T")
+    plot.ylabel("N")
+    plot.title("Population: Hyper model")
     plot.show()
 
 
 show_plots_for_single_source()
 show_plots_for_different_sources()
+show_plots_for_single_source_hyp()
