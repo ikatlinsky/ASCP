@@ -3,11 +3,9 @@ import matplotlib.pyplot as plot
 import numpy as np
 import numpy.linalg as la
 import data_population_parsing as dpp
+import data_different_sources_parsing as ddsp
 
 __author__ = 'ikatlinsky'
-
-population = dpp.get_population_data()
-population_ln = dpp.get_population_data(use_population_ln=True)
 
 
 def plan_matrix(data):
@@ -16,10 +14,6 @@ def plan_matrix(data):
 
 def data_vector(data):
     return [[element[1]] for element in data]
-
-plan_matrix = plan_matrix(population)
-y = data_vector(population)
-y_ln = data_vector(population_ln)
 
 
 def regression_coefficients(plan, y):
@@ -38,18 +32,90 @@ def regression_coefficients(plan, y):
 def f(t, c):
     return c[0] + c[1] * t
 
-# Линейная модель
-print regression_coefficients(plan_matrix, y)
-linear_model = regression_coefficients(plan_matrix, y)
-plot.plot(population[:, 0], population[:, 1], linestyle='-', color='r')
-plot.plot(population[:, 0], [f(t, linear_model) for t in population[:, 0]])
-plot.show()
+# single source data
+population = dpp.get_population_data()
+population_ln = dpp.get_population_data(use_population_ln=True)
 
-print "\n"
+plan_matrix_ss = plan_matrix(population)
+y = data_vector(population)
+y_ln = data_vector(population_ln)
 
-# Экспоненциальная модель
-print regression_coefficients(plan_matrix, y_ln)
-exp_model = regression_coefficients(plan_matrix, y)
-plot.plot(population_ln[:, 0], population_ln[:, 1], linestyle='-', color='r')
-plot.plot(population_ln[:, 0], [f(t, exp_model) for t in population_ln[:, 0]])
-plot.show()
+# multiple sources data
+population_ds = ddsp.get_data_from_different_sources()[0]
+population_ds_ln = ddsp.get_data_from_different_sources(use_population_ln=True)[0]
+
+plan_matrix_ds = plan_matrix(population_ds)
+y_ds = data_vector(population_ds)
+y_ds_ln = data_vector(population_ds_ln)
+
+
+def show_plots_for_single_source():
+    print "Коэффициенты линейной модели: %s" % regression_coefficients(plan_matrix_ss, y)
+    print "Коэффициенты линейной модели: %s" % regression_coefficients(plan_matrix_ss, y_ln)
+
+    plot.figure(1, figsize=(19, 10), dpi=80)
+
+    # Линейная модель
+    linear_model = regression_coefficients(plan_matrix_ss, y)
+    plot.subplot(211)
+    plot.plot(population[:, 0], population[:, 1], linestyle='-', color='r')
+    plot.plot(population[:, 0], [f(t, linear_model) for t in population[:, 0]])
+    plot.xlabel("T")
+    plot.ylabel("N")
+    plot.title("Population: standard scale")
+
+    # Экспоненциальная модель
+    exp_model = regression_coefficients(plan_matrix_ss, y_ln)
+    plot.subplot(212)
+    plot.plot(population_ln[:, 0], population_ln[:, 1], linestyle='-', color='r')
+    plot.plot(population_ln[:, 0], [f(t, exp_model) for t in population_ln[:, 0]])
+    plot.xlabel("T")
+    plot.ylabel("Ln(N)")
+    plot.title("Population: Ln from population")
+
+    plot.show()
+
+
+def show_plots_for_different_sources():
+    print "Коэффициенты линейной модели: %s" % regression_coefficients(plan_matrix_ds, y_ds)
+    print "Коэффициенты линейной модели: %s" % regression_coefficients(plan_matrix_ds, y_ds_ln)
+
+    plot.figure(1, figsize=(19, 10), dpi=80)
+
+    # Линейная модель
+    data = ddsp.get_data_from_different_sources()
+    linear_model = regression_coefficients(plan_matrix_ds, y_ds)
+    plot.subplot(211)
+    plot.plot(
+        population_ds[:, 0], population_ds[:, 1],
+        data[1][:, 0], data[1][:, 1],
+        data[2][:, 0], data[2][:, 1],
+        linestyle='-', color='r'
+    )
+    plot.plot(population_ds[:, 0], [f(t, linear_model) for t in population_ds[:, 0]])
+    plot.fill_between(data[1][:, 0], data[1][:, 1], data[2][:, 1], color='red')
+    plot.xlabel("T")
+    plot.ylabel("N")
+    plot.title("Population: standard scale")
+
+    # Экспоненциальная модель
+    data = ddsp.get_data_from_different_sources(use_population_ln=True)
+    exp_model = regression_coefficients(plan_matrix_ds, y_ds_ln)
+    plot.subplot(212)
+    plot.plot(
+        population_ds_ln[:, 0], population_ds_ln[:, 1],
+        data[1][:, 0], data[1][:, 1],
+        data[2][:, 0], data[2][:, 1],
+        linestyle='-', color='r'
+    )
+    plot.plot(population_ds_ln[:, 0], [f(t, exp_model) for t in population_ds_ln[:, 0]])
+    plot.fill_between(data[1][:, 0], data[1][:, 1], data[2][:, 1], color='red')
+    plot.xlabel("T")
+    plot.ylabel("Ln(N)")
+    plot.title("Population: Ln from population")
+
+    plot.show()
+
+
+show_plots_for_single_source()
+show_plots_for_different_sources()
