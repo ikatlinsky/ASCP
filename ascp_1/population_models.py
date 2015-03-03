@@ -31,14 +31,24 @@ def regression_coefficients(data):
     return [c[0, 0], c[1, 0]]
 
 
-def f(t, c):
+def f_lin(t, c):
     """
-    Функция задающая график модели по коэффициетам
+    Функция задающая график линейной модели по коэффициетам
     :param t: параметр - годы
     :param c: коэффициенты
     :return: начения линейной модели в заданной точке t
     """
     return c[0] + c[1] * t
+
+
+def f_exp(t, c):
+    """
+    Функция задающая график экспоненциальной модели по коэффициетам
+    :param t: параметр - годы
+    :param c: коэффициенты
+    :return: начения линейной модели в заданной точке t
+    """
+    return np.exp(c[0] + c[1] * t)
 
 # Функция отрисовки графиков для линейной и экспоненциальной моделей
 
@@ -65,7 +75,7 @@ def show_plots_for_different_sources():
         data[2][:, 0], data[2][:, 1],
         linestyle='-', color='r', label="Population data", linewidth=5
     )
-    plot.plot(population_ds[:, 0], [f(t, linear_model) for t in population_ds[:, 0]], label="Linear model", linewidth=5)
+    plot.plot(population_ds[:, 0], [f_lin(t, linear_model) for t in population_ds[:, 0]], label="Linear model", linewidth=5)
     plot.fill_between(data[1][:, 0], data[1][:, 1], data[2][:, 1], color='red')
     plot.xlabel("T")
     plot.ylabel("N")
@@ -73,16 +83,16 @@ def show_plots_for_different_sources():
     plot.legend(loc='upper left')
 
     # Экспоненциальная модель
-    data = dp.get_multiple_sources_data(use_population_ln=True)
+    data = dp.get_multiple_sources_data()
     exp_model = regression_coefficients(population_ds_ln)
     plot.subplot(212)
     plot.plot(
-        population_ds_ln[:, 0], population_ds_ln[:, 1],
+        population_ds[:, 0], population_ds[:, 1],
         data[1][:, 0], data[1][:, 1],
         data[2][:, 0], data[2][:, 1],
         linestyle='-', color='r', label="Population data", linewidth=5
     )
-    plot.plot(population_ds_ln[:, 0], [f(t, exp_model) for t in population_ds_ln[:, 0]], label="Exponential model", linewidth=5)
+    plot.plot(population_ds[:, 0], [f_exp(t, exp_model) for t in population_ds[:, 0]], label="Exponential model", linewidth=5)
     plot.fill_between(data[1][:, 0], data[1][:, 1], data[2][:, 1], color='red')
     plot.xlabel("T")
     plot.ylabel("Ln(N)")
