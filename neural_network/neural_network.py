@@ -96,7 +96,7 @@ class MLP_NeuralNetwork(object):
 
         return error
 
-    def train(self, patterns, iterations = 3000, N = 0.0002):
+    def train(self, patterns, iterations=3000, n=0.0002):
         # N: learning rate
         for i in range(iterations):
             error = 0.0
@@ -104,7 +104,7 @@ class MLP_NeuralNetwork(object):
                 inputs = p[0]
                 targets = p[1]
                 self.feedForward(inputs)
-                error = self.backPropagate(targets, N)
+                error = self.backPropagate(targets, n)
             if i % 500 == 0:
                 print('error %-.5f' % error)
 

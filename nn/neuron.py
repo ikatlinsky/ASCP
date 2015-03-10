@@ -28,6 +28,9 @@ class Neuron():
         self.weights = [rnd.random() for _ in range(size)]
         self.act_func = act_func
 
+    def get_size(self):
+        return len(self.weights)
+
     def get_value(self, x):
         """
         Возвращает результат действия функции активации на нейрон при заданных значениях :param x
@@ -68,6 +71,27 @@ class Neuron():
         self.weights = np.add(self.weights, weights)
         return self.weights
 
+    def train(self, x, t):
+        """
+        Обучает нейрон по заданным параметрам
+        :param x: входной вектор сигнала
+        :param t: ожидаемый результат
+        """
+        delta = 1
+
+        while delta != 0:
+            out = self.get_value(x)
+            delta = t - out
+            deltas = [delta * x[i] for i in range(len(x))]
+            self.add_to_weights(deltas)
+
+    def predict(self, x):
+        """
+        Функция предсказания, ответ нейрона на входной сигнал
+        :return: значение нерона для заданного сигнала
+        """
+        return self.get_value(x)
+
 
 def test():
     """
@@ -89,8 +113,30 @@ def test():
     print "Заменяем веса: %s" % n.set_weight(w)
     print "\n"
 
-    print "Изменяем веса: %s" % n.add_to_weights(x)
-    print "\n"
 
-test()
+def test_training():
+    """
+    Пример обучения нейрона логической операции или. Обучаем нейрон так, чтобы на пару [0,0] он возвращал 0, иначе 1.
+    """
+    test_vector_0_1 = [0, 0]
+    test_vector_1_1 = [1, 0]
+    test_vector_1_2 = [1, 1]
+    test_vector_1_3 = [0, 1]
+
+    n = Neuron(2, nu.linear_activation)
+    n.train(test_vector_1_1, 1)
+    n.train(test_vector_1_2, 1)
+    n.train(test_vector_1_3, 1)
+    n.train(test_vector_0_1, 0)
+
+    print "Проверка обученности нейрона: (должен возвращать 1):"
+    print "Вектор %s. Значение %s" % (test_vector_1_1, n.predict(test_vector_1_1))
+    print "Вектор %s. Значение %s" % (test_vector_1_2, n.predict(test_vector_1_2))
+    print "Вектор %s. Значение %s" % (test_vector_1_3, n.predict(test_vector_1_3))
+
+    print "Проверка обученности нейрона: (должен возвращать 0):"
+    print "Вектор %s. Значение %s" % (test_vector_0_1, n.predict(test_vector_0_1))
+
+#test()
+#test_training()
 

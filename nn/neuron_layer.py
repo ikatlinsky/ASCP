@@ -2,6 +2,7 @@
 from neuron import Neuron
 import neuron_utils as nu
 import random as rnd
+import numpy as np
 
 __author__ = 'ikatlinsky'
 
@@ -45,12 +46,10 @@ class NeuronLayer:
     def get_value(self, x_list):
         """
         Возращает результат функции активации для каждого нейрона в слое, исходя их списка значений для каждого нейрона
-        :param x_list: список значений для всех нейронов, длина списка должна совпадать с числов нейронов в слое
+        :param x_list: список значений для всех нейронов
         """
-        if len(x_list) != len(self.neurons):
-            raise ValueError("Size of neuron values list should be equal to number of neurons")
 
-        return [self.neurons[i].get_value(x_list[i]) for i in range(len(x_list))]
+        return [self.neurons[i].get_value(x_list) for i in range(len(self.neurons))]
 
     def set_weights(self, weights_list):
         """
@@ -64,20 +63,33 @@ class NeuronLayer:
 
         return [self.neurons[i].set_weight(weights_list[i]) for i in range(len(weights_list))]
 
-    def set_weights_single(self, weights, i):
-        """
-        Залает веса для i-го нейрона
-        :param weights: список значений весов, длина должна совпдать с длиной весов нейрона
-        :param i: номер нейрона для присвоения новых весов, номер нейрона не должен быть больше количества весов
-        :return новые веса для нейрона
-        """
-        if i > len(self.neurons):
-            raise ValueError("There are no such neuron in layer")
+    def get_weights(self):
+        return [self.neurons[i].weights for i in range(len(self.neurons))]
 
-        if len(weights) != len(self.neurons[i].weights):
-            raise ValueError("Length of weights lisy should be equal")
+    def train(self, x, t):
+        """
+        Обучение слоя нейронов исходя из входязего сигнала x и ожидаемого резульата t.
+        :param x: входной сигнал, длина списка значений сигнала равна числу синапсов кажжого нейрона
+        :param t: ожидаемый результат, длина списка t равна числу нейронов в слое
+        """
+        if len(t) != len(self.neurons):
+            raise ValueError()
 
-        return self.neurons[i].set_weight(weights)
+        if len(x) != self.neurons[0].get_size():
+            raise ValueError()
+
+        delta = [1 for _ in range(len(t))]
+
+        while not all(v == 0 for v in delta):
+            out = self.get_value(x)
+            delta = np.subtract(t, out)
+
+            for i in range(len(self.neurons)):
+                deltas = [delta[i] * x[j] for j in range(len(x))]
+                self.neurons[i].add_to_weights(deltas)
+
+    def predict(self, x):
+        return self.get_value(x)
 
 
 def test():
@@ -101,7 +113,7 @@ def test():
 
     # Результат действия функции активации
     print "Результат действия функции активации:"
-    print neuron_layer.get_value([[rnd.random() for _ in range(neuron_layer.get_neuron_size())] for _ in range(neuron_layer.get_size())])
+    print neuron_layer.get_value([rnd.random() for _ in range(neuron_layer.get_neuron_size())])
     print "\n"
 
     # Замена весов всех нейронов
@@ -109,16 +121,36 @@ def test():
     print neuron_layer.set_weights([nu.generate_random_list(neuron_layer.get_neuron_size()) for _ in range(neuron_layer.get_size())])
     print "\n"
 
-    # Замена весов для одного нейрона
-    print "Замена весов для одного нейрона:"
-    print neuron_layer.set_weights_single(nu.generate_random_list(neuron_layer.get_neuron_size()), 2)
-    print "\n"
+
+def test_train():
+    """
+    Пример обучения слоя нейронной сети.
+    """
+    # Создаем слой нейронов
+    nl = NeuronLayer(2, 3, nu.linear_activation)
+
+    test_vector_0 = [0, 0, 0]
+    test_vector_1 = [1, 0, 0]
+    test_vector_2 = [1, 1, 1]
+    test_vector_3 = [0, 0, 1]
+
+    nl.train(test_vector_0, [0, 0])
+    nl.train(test_vector_1, [1, 0])
+    nl.train(test_vector_2, [1, 1])
+    nl.train(test_vector_3, [0, 1])
+
+    print "Проверка обученности нейрона: (должен возвращать [0, 0]):"
+    print "Вектор %s. Значение %s" % (test_vector_0, nl.predict(test_vector_0))
+
+    print "Проверка обученности нейрона: (должен возвращать [1, 0]):"
+    print "Вектор %s. Значение %s" % (test_vector_1, nl.predict(test_vector_1))
+
+    print "Проверка обученности нейрона: (должен возвращать [1, 1]):"
+    print "Вектор %s. Значение %s" % (test_vector_2, nl.predict(test_vector_2))
+
+    print "Проверка обученности нейрона: (должен возвращать [0, 0]):"
+    print "Вектор %s. Значение %s" % (test_vector_3, nl.predict(test_vector_3))
 
 
-def test_exceptions():
-    NeuronLayer(0, 10, nu.linear_activation)
-    NeuronLayer(5, 0, nu.linear_activation)
-
-
-test()
-# test_exceptions()
+#test()
+#test_train()

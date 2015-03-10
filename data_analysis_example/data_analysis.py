@@ -4,7 +4,7 @@ import seaborn as sns
 
 __author__ = 'ikatlinsky'
 
-# Reading data from web
+#Reading data from web
 data_url = "https://raw.githubusercontent.com/alstat/Analysis-with-Programming/master/2014/Python/Numerical-Descriptions-of-the-Data/data.csv"
 df = pd.read_csv(data_url)
 
